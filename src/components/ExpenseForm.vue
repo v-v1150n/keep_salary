@@ -1,19 +1,22 @@
 <template>
-  <form class="expense-form" @submit.prevent="submitExpense">
+  <form class="expense-form clay-card" @submit.prevent="submitExpense">
     <h3>📝 新增支出</h3>
     <div class="form-row">
       <div class="form-group">
         <label for="category">項目</label>
-        <select id="category" v-model="selectedCategory" required>
-          <option value="" disabled>選擇項目</option>
-          <option
-            v-for="cat in categories"
-            :key="cat.id"
-            :value="cat.id"
-          >
-            {{ cat.name }}
-          </option>
-        </select>
+        <div class="select-wrapper">
+          <select id="category" v-model="selectedCategory" class="clay-input" required>
+            <option value="" disabled>選擇項目</option>
+            <option
+              v-for="cat in categories"
+              :key="cat.id"
+              :value="cat.id"
+            >
+              {{ cat.name }}
+            </option>
+          </select>
+          <span class="chevron">▼</span>
+        </div>
       </div>
       
       <div class="form-group">
@@ -22,13 +25,14 @@
           id="amount"
           type="number"
           v-model.number="amount"
+          class="clay-input"
           placeholder="0"
           min="1"
           required
         />
       </div>
       
-      <button type="submit" class="submit-btn" :disabled="!isValid">
+      <button type="submit" class="clay-button submit-btn" :disabled="!isValid">
         + 記錄
       </button>
     </div>
@@ -68,74 +72,88 @@ const submitExpense = () => {
 
 <style scoped>
 .expense-form {
-  background: var(--bg-card);
-  border-radius: 16px;
-  padding: 1.25rem;
-  border: 2px solid var(--border-color);
+  padding: 1.5rem;
 }
 
 .expense-form h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1rem;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.2rem;
   color: var(--text-primary);
+  font-weight: 700;
 }
 
 .form-row {
   display: flex;
-  gap: 0.75rem;
+  gap: 1.5rem;
   align-items: flex-end;
   flex-wrap: wrap;
 }
 
 .form-group {
   flex: 1;
-  min-width: 120px;
+  min-width: 150px;
 }
 
 .form-group label {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  padding-left: 0.5rem;
 }
 
-.form-group select,
-.form-group input {
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper select {
   width: 100%;
-  padding: 0.7rem 0.75rem;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 0.95rem;
+  appearance: none;
+  cursor: pointer;
 }
 
-.form-group select:focus,
-.form-group input:focus {
-  outline: none;
-  border-color: var(--primary);
+.chevron {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.clay-input {
+  width: 100%;
+  font-size: 1.1rem;
 }
 
 .submit-btn {
-  padding: 0.7rem 1.25rem;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
+  padding: 1rem 2rem;
+  color: var(--primary-dark);
+  font-size: 1.1rem;
+  min-width: 120px;
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
+  color: var(--primary);
 }
 
 .submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none !important;
+  background: rgba(0,0,0,0.05);
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .submit-btn {
+    width: 100%;
+  }
 }
 </style>

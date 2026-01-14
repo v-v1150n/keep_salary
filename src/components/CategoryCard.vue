@@ -1,9 +1,9 @@
 <template>
-  <div class="category-card" :class="{ warning: percentage > 80, danger: percentage > 95 }">
+  <div class="category-card clay-card" :class="{ warning: percentage > 80, danger: percentage > 95 }">
     <div class="card-header">
-      <span class="icon">{{ getIcon(category.name) }}</span>
+      <div class="icon-bubble">{{ getIcon(category.name) }}</div>
       <h3>{{ category.name }}</h3>
-      <span class="ratio-badge">{{ category.ratio }}</span>
+      <span class="ratio-badge">權重 {{ category.ratio }}</span>
     </div>
     
     <div class="budget-info">
@@ -17,12 +17,10 @@
       </div>
     </div>
 
-    <div class="progress-container">
-      <div class="progress-bar">
-        <div class="progress-fill" :style="{ width: percentage + '%' }"></div>
-      </div>
-      <span class="percentage">{{ percentage.toFixed(0) }}%</span>
+    <div class="progress-outer">
+      <div class="progress-inner" :style="{ width: percentage + '%' }"></div>
     </div>
+    <div class="percentage-text">{{ percentage.toFixed(0) }}%</div>
 
     <div class="remaining">
       <span class="label">剩餘</span>
@@ -70,65 +68,68 @@ const getIcon = (name) => {
 
 <style scoped>
 .category-card {
-  background: var(--bg-card);
-  border-radius: 16px;
-  padding: 1.25rem;
-  border: 2px solid var(--border-color);
-  transition: all 0.3s;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
 }
 
-.category-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+.category-card.warning .progress-inner {
+  background: var(--warning);
 }
 
-.category-card.warning {
-  border-color: var(--warning);
-}
-
-.category-card.danger {
-  border-color: var(--danger);
+.category-card.danger .progress-inner {
+  background: var(--danger);
+  box-shadow: 0 0 10px var(--danger);
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.icon {
+.icon-bubble {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--clay-bg);
+  box-shadow: var(--clay-shadow-out);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.5rem;
+  color: var(--text-primary);
 }
 
 .card-header h3 {
   flex: 1;
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
 .ratio-badge {
-  background: var(--primary-light);
-  color: var(--primary);
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
   font-size: 0.75rem;
+  color: var(--text-secondary);
   font-weight: 600;
+  background: rgba(166, 180, 200, 0.2);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
 }
 
 .budget-info {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
 }
 
 .budget-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .budget-row .label {
@@ -137,68 +138,57 @@ const getIcon = (name) => {
 
 .budget-row .value {
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .budget-row .value.spent {
-  color: var(--primary);
+  color: var(--primary-dark);
 }
 
-.progress-container {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 8px;
-  background: var(--bg-input);
-  border-radius: 4px;
+.progress-outer {
+  height: 12px;
+  background: var(--bg-main);
+  border-radius: 10px;
+  box-shadow: var(--clay-shadow-in);
+  margin-bottom: 0.5rem;
   overflow: hidden;
+  position: relative;
 }
 
-.progress-fill {
+.progress-inner {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-  border-radius: 4px;
-  transition: width 0.3s ease;
+  background: var(--primary);
+  border-radius: 10px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.category-card.warning .progress-fill {
-  background: linear-gradient(90deg, var(--warning), #e67e00);
-}
-
-.category-card.danger .progress-fill {
-  background: linear-gradient(90deg, var(--danger), #c0392b);
-}
-
-.percentage {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  min-width: 36px;
+.percentage-text {
   text-align: right;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
 }
 
 .remaining {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+  border-top: 1px solid rgba(166, 180, 200, 0.3);
 }
 
 .remaining .label {
   font-size: 0.9rem;
   color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .remaining .value {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 800;
   color: var(--success);
+  text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
 }
 
 .remaining .value.negative {

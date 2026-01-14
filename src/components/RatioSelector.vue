@@ -5,7 +5,7 @@
       <button
         v-for="preset in presets"
         :key="preset.name"
-        :class="['preset-btn', { active: isActivePreset(preset) }]"
+        :class="['clay-button preset-btn', { active: isActivePreset(preset) }]"
         @click="selectPreset(preset)"
       >
         {{ preset.name }}
@@ -23,32 +23,32 @@
           :value="category.name"
           @input="updateCategory(index, 'name', $event.target.value)"
           placeholder="項目名稱"
-          class="name-input"
+          class="clay-input name-input"
         />
         <input
           type="number"
           :value="category.ratio"
           @input="updateCategory(index, 'ratio', Number($event.target.value))"
-          placeholder="比例"
+          placeholder="權重"
           min="0.1"
           step="0.1"
-          class="ratio-input"
+          class="clay-input ratio-input"
         />
         <button
           v-if="modelValue.length > 1"
-          class="remove-btn"
+          class="delete-btn"
           @click="removeCategory(index)"
         >
           ✕
         </button>
       </div>
-      <button class="add-btn" @click="addCategory">+ 新增項目</button>
+      <button class="clay-button add-btn" @click="addCategory">+ 新增項目</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -112,112 +112,88 @@ const removeCategory = (index) => {
 </script>
 
 <style scoped>
-.ratio-selector {
-  margin-bottom: 1.5rem;
-}
-
 .ratio-selector > label {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.8rem;
+  font-weight: 600;
+  padding-left: 0.5rem;
 }
 
 .preset-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
 .preset-btn {
-  padding: 0.6rem 1rem;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.preset-btn:hover {
-  border-color: var(--primary);
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
 }
 
 .preset-btn.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
+  color: var(--primary);
+  box-shadow: var(--clay-shadow-pressed);
 }
 
 .custom-ratios {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .custom-item {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.8rem;
   align-items: center;
 }
 
 .name-input {
   flex: 2;
-  padding: 0.6rem 0.75rem;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .ratio-input {
   flex: 1;
-  padding: 0.6rem 0.75rem;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 0.9rem;
   text-align: center;
+  font-size: 1rem;
 }
 
-.name-input:focus,
-.ratio-input:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.remove-btn {
-  width: 32px;
-  height: 32px;
+.delete-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   border: none;
-  border-radius: 8px;
-  background: var(--danger);
-  color: white;
+  background: var(--clay-bg);
+  box-shadow: var(--clay-shadow-out);
+  color: var(--danger);
   cursor: pointer;
-  font-size: 0.8rem;
-  transition: opacity 0.2s;
-}
-
-.remove-btn:hover {
-  opacity: 0.85;
-}
-
-.add-btn {
-  padding: 0.6rem;
-  border: 2px dashed var(--border-color);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
 
+.delete-btn:hover {
+  transform: scale(1.1);
+  color: #c53030;
+}
+
+.delete-btn:active {
+  box-shadow: var(--clay-shadow-pressed);
+  transform: scale(0.95);
+}
+
+.add-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.8rem;
+  color: var(--text-secondary);
+}
+
 .add-btn:hover {
-  border-color: var(--primary);
   color: var(--primary);
 }
 </style>

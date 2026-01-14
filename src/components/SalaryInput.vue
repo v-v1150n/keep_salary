@@ -1,17 +1,17 @@
 <template>
   <div class="salary-input">
     <label for="salary">月薪金額</label>
-    <div class="input-group">
+    <div class="input-wrapper">
       <span class="currency">$</span>
       <input
         id="salary"
         type="number"
         :value="modelValue"
+        class="clay-input"
         @input="$emit('update:modelValue', Number($event.target.value))"
         placeholder="輸入你的月薪"
         min="0"
       />
-      <span class="unit">元</span>
     </div>
   </div>
 </template>
@@ -29,56 +29,45 @@ defineEmits(['update:modelValue'])
 
 <style scoped>
 .salary-input {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .salary-input label {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
+  font-weight: 600;
+  padding-left: 0.5rem;
 }
 
-.input-group {
+.input-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  background: var(--bg-input);
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--border-color);
-  transition: border-color 0.2s;
-}
-
-.input-group:focus-within {
-  border-color: var(--primary);
 }
 
 .currency {
+  position: absolute;
+  left: 1.2rem;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--primary);
-  margin-right: 0.5rem;
+  z-index: 1;
 }
 
-.input-group input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  outline: none;
+input.clay-input {
   width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 1px;
 }
 
-.input-group input::placeholder {
-  color: var(--text-muted);
+input.clay-input::placeholder {
+  color: #cbd5e0;
   font-weight: 400;
-}
-
-.unit {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  margin-left: 0.5rem;
+  font-size: 1.2rem;
 }
 </style>
