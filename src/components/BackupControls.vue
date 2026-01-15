@@ -21,7 +21,8 @@ import { ref } from 'vue'
 
 const props = defineProps({
   salary: { type: Number, required: true },
-  categories: { type: Array, required: true }
+  categories: { type: Array, required: true },
+  expenses: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits(['import'])
@@ -33,6 +34,7 @@ const exportData = () => {
   const data = {
     salary: props.salary,
     categories: props.categories,
+    expenses: props.expenses,
     exportedAt: new Date().toISOString()
   }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -64,7 +66,7 @@ const importData = (event) => {
     }
   }
   reader.readAsText(file)
-  event.target.value = '' // 重設以便再次選擇同檔案
+  event.target.value = ''
 }
 
 // 複製URL hash連結
@@ -75,7 +77,8 @@ const copyLink = () => {
       n: c.name,
       r: c.ratio,
       p: c.spent
-    }))
+    })),
+    e: props.expenses
   }
   const hash = encodeURIComponent(JSON.stringify(data))
   const url = `${window.location.origin}${window.location.pathname}#${hash}`
@@ -102,18 +105,22 @@ const copyLink = () => {
   padding: 0.5rem 0.9rem;
   border: none;
   border-radius: 10px;
-  background: var(--bg-card);
+  background: var(--clay-bg);
+  box-shadow: var(--clay-shadow-out);
   color: var(--text-secondary);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
-  border: 1px solid var(--border-color);
 }
 
 .backup-btn:hover {
-  background: var(--primary-light);
   color: var(--primary);
-  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.backup-btn:active {
+  box-shadow: var(--clay-shadow-pressed);
+  transform: translateY(0);
 }
 
 .backup-btn .icon {

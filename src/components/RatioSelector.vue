@@ -62,7 +62,6 @@ const emit = defineEmits(['update:modelValue'])
 const presets = [
   { name: '6/3/1', ratios: [6, 3, 1], labels: ['生活開銷', '儲蓄', '娛樂'] },
   { name: '5/3/2', ratios: [5, 3, 2], labels: ['生活', '儲蓄', '投資'] },
-  { name: '3.5/3.5/3', ratios: [3.5, 3.5, 3], labels: ['必要', '儲蓄', '彈性'] },
   { name: '自訂', ratios: null, labels: null }
 ]
 

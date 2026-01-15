@@ -6,7 +6,8 @@
       <div class="top-controls">
         <BackupControls 
           :salary="salary" 
-          :categories="categories" 
+          :categories="categories"
+          :expenses="expenses"
           @import="handleImport" 
         />
       </div>
@@ -32,6 +33,15 @@
       />
     </section>
 
+    <section class="history-section">
+      <ExpenseList
+        :expenses="expenses"
+        :categories="categories"
+        @delete="handleDeleteExpense"
+        @clear-all="handleClearExpenses"
+      />
+    </section>
+
     <footer class="app-footer">
       <button class="reset-btn" @click="resetAll">
         🔄 重置全部
@@ -47,6 +57,7 @@ import SalaryInput from './components/SalaryInput.vue'
 import RatioSelector from './components/RatioSelector.vue'
 import CategoryCard from './components/CategoryCard.vue'
 import ExpenseForm from './components/ExpenseForm.vue'
+import ExpenseList from './components/ExpenseList.vue'
 import BackupControls from './components/BackupControls.vue'
 
 // 使用 LocalStorage 持久化
@@ -56,6 +67,7 @@ const categories = useStorage('salary-manager-categories', [
   { id: 2, name: '儲蓄', ratio: 3, budget: 0, spent: 0 },
   { id: 3, name: '娛樂', ratio: 1, budget: 0, spent: 0 }
 ])
+const expenses = useStorage('salary-manager-expenses', [])
 
 // 初始化時檢查 URL Hash
 onMounted(() => {
@@ -65,7 +77,6 @@ onMounted(() => {
       const json = decodeURIComponent(hash.slice(1))
       const data = JSON.parse(json)
       
-      // 簡單的資料校驗
       if (typeof data.s === 'number' && Array.isArray(data.c)) {
         if (confirm('偵測到分享連結資料，是否載入？（目前的資料將被覆蓋）')) {
           salary.value = data.s
@@ -73,10 +84,12 @@ onMounted(() => {
             id: index + 1,
             name: c.n,
             ratio: c.r,
-            budget: 0, // 會自動計算
+            budget: 0,
             spent: c.p || 0
           }))
-          // 清除 hash 避免重新整理又跳出來
+          if (data.e) {
+            expenses.value = data.e
+          }
           history.replaceState(null, '', ' ')
         }
       }
@@ -91,6 +104,9 @@ const handleImport = (data) => {
   if (confirm('確定要載入備份檔案嗎？會覆蓋目前的設定。')) {
     salary.value = data.salary
     categories.value = data.categories
+    if (data.expenses) {
+      expenses.value = data.expenses
+    }
   }
 }
 
@@ -115,10 +131,43 @@ watch(categoriesWithBudget, (newCats) => {
 }, { deep: true })
 
 // 處理新增支出
-const handleAddExpense = ({ categoryId, amount }) => {
+const handleAddExpense = ({ categoryId, amount, note }) => {
   const index = categories.value.findIndex(c => c.id === categoryId)
   if (index !== -1) {
     categories.value[index].spent += amount
+    // 記錄到 expenses
+    expenses.value.push({
+      id: Date.now(),
+      categoryId,
+      amount,
+      note,
+      date: new Date().toISOString().slice(0, 10)
+    })
+  }
+}
+
+// 刪除單筆支出
+const handleDeleteExpense = (expenseId) => {
+  const expense = expenses.value.find(e => e.id === expenseId)
+  if (expense) {
+    // 扣回 spent
+    const catIndex = categories.value.findIndex(c => c.id === expense.categoryId)
+    if (catIndex !== -1) {
+      categories.value[catIndex].spent -= expense.amount
+    }
+    // 移除紀錄
+    expenses.value = expenses.value.filter(e => e.id !== expenseId)
+  }
+}
+
+// 清除所有支出紀錄
+const handleClearExpenses = () => {
+  if (confirm('確定要清除所有支出紀錄嗎？')) {
+    // 重置所有 spent
+    categories.value.forEach(cat => {
+      cat.spent = 0
+    })
+    expenses.value = []
   }
 }
 
@@ -131,6 +180,7 @@ const resetAll = () => {
       { id: 2, name: '儲蓄', ratio: 3, budget: 0, spent: 0 },
       { id: 3, name: '娛樂', ratio: 1, budget: 0, spent: 0 }
     ]
+    expenses.value = []
   }
 }
 </script>
@@ -139,7 +189,7 @@ const resetAll = () => {
 .app {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 2rem;
 }
 
 .app-header {
@@ -180,14 +230,18 @@ const resetAll = () => {
 }
 
 .expense-section {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+}
+
+.history-section {
+  margin-top: 0.5rem;
 }
 
 .app-footer {
   display: flex;
   justify-content: center;
   padding: 1rem 0;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .reset-btn {

@@ -2,7 +2,7 @@
   <form class="expense-form clay-card" @submit.prevent="submitExpense">
     <h3>📝 新增支出</h3>
     <div class="form-row">
-      <div class="form-group">
+      <div class="form-group category-group">
         <label for="category">項目</label>
         <div class="select-wrapper">
           <select id="category" v-model="selectedCategory" class="clay-input" required>
@@ -19,7 +19,7 @@
         </div>
       </div>
       
-      <div class="form-group">
+      <div class="form-group amount-group">
         <label for="amount">金額</label>
         <input
           id="amount"
@@ -29,6 +29,17 @@
           placeholder="0"
           min="1"
           required
+        />
+      </div>
+      
+      <div class="form-group note-group">
+        <label for="note">費用來源</label>
+        <input
+          id="note"
+          type="text"
+          v-model="note"
+          class="clay-input"
+          placeholder="例：午餐、交通費"
         />
       </div>
       
@@ -53,6 +64,7 @@ const emit = defineEmits(['add-expense'])
 
 const selectedCategory = ref('')
 const amount = ref(null)
+const note = ref('')
 
 const isValid = computed(() => {
   return selectedCategory.value && amount.value > 0
@@ -63,10 +75,12 @@ const submitExpense = () => {
   
   emit('add-expense', {
     categoryId: selectedCategory.value,
-    amount: amount.value
+    amount: amount.value,
+    note: note.value || '未標註'
   })
   
   amount.value = null
+  note.value = ''
 }
 </script>
 
@@ -84,14 +98,25 @@ const submitExpense = () => {
 
 .form-row {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   align-items: flex-end;
   flex-wrap: wrap;
 }
 
 .form-group {
+  min-width: 120px;
+}
+
+.form-group.category-group {
+  flex: 1.5;
+}
+
+.form-group.amount-group {
   flex: 1;
-  min-width: 150px;
+}
+
+.form-group.note-group {
+  flex: 2;
 }
 
 .form-group label {
@@ -125,14 +150,14 @@ const submitExpense = () => {
 
 .clay-input {
   width: 100%;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .submit-btn {
-  padding: 1rem 2rem;
+  padding: 0.9rem 1.5rem;
   color: var(--primary-dark);
-  font-size: 1.1rem;
-  min-width: 120px;
+  font-size: 1rem;
+  min-width: 100px;
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -146,14 +171,19 @@ const submitExpense = () => {
   background: rgba(0,0,0,0.05);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .form-row {
     flex-direction: column;
     align-items: stretch;
   }
   
+  .form-group {
+    width: 100%;
+  }
+  
   .submit-btn {
     width: 100%;
+    margin-top: 0.5rem;
   }
 }
 </style>
