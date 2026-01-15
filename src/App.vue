@@ -18,6 +18,13 @@
       <RatioSelector v-model="categories" />
     </section>
 
+    <section class="summary-section">
+      <TotalSummary
+        :salary="salary"
+        :categories="categoriesWithBudget"
+      />
+    </section>
+
     <section class="categories-grid">
       <CategoryCard
         v-for="category in categoriesWithBudget"
@@ -58,6 +65,7 @@ import RatioSelector from './components/RatioSelector.vue'
 import CategoryCard from './components/CategoryCard.vue'
 import ExpenseForm from './components/ExpenseForm.vue'
 import ExpenseList from './components/ExpenseList.vue'
+import TotalSummary from './components/TotalSummary.vue'
 import BackupControls from './components/BackupControls.vue'
 
 // 使用 LocalStorage 持久化
@@ -260,13 +268,40 @@ const resetAll = () => {
   color: var(--danger);
 }
 
-@media (max-width: 480px) {
+/* Tablet */
+@media (max-width: 768px) {
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 500px) {
+  .app {
+    gap: 1.5rem;
+  }
+  
   .app-header h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
+  }
+  
+  .subtitle {
+    font-size: 0.9rem;
   }
   
   .settings-section {
-    padding: 1.5rem;
+    padding: 1.25rem;
+  }
+  
+  .categories-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .reset-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
   }
 }
 </style>
