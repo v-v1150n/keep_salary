@@ -195,4 +195,50 @@ const removeCategory = (index) => {
 .add-btn:hover {
   color: var(--primary);
 }
+
+/* Mobile Responsive */
+@media (max-width: 500px) {
+  .preset-buttons {
+    gap: 0.5rem;
+  }
+  
+  .preset-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+  }
+  
+  .custom-ratios {
+    margin-top: 1rem;
+    gap: 0.75rem;
+  }
+  
+  .custom-item {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .name-input {
+    flex: 1 1 100%;
+    order: 1;
+  }
+  
+  .ratio-input {
+    flex: 1;
+    order: 2;
+  }
+  
+  .delete-btn {
+    width: 32px;
+    height: 32px;
+    order: 3;
+  }
+  
+  .add-btn {
+    padding: 0.7rem;
+    font-size: 0.9rem;
+  }
+}
 </style>
