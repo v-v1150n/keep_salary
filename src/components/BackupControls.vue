@@ -1,8 +1,12 @@
 <template>
   <div class="backup-controls">
-    <button class="backup-btn export" @click="exportData" title="匯出備份">
+    <button class="backup-btn export" @click="exportData" title="匯出本月備份">
       <span class="icon">📥</span>
       <span class="label">匯出</span>
+    </button>
+    <button class="backup-btn export-all" @click="exportAllData" title="匯出完整歷史">
+      <span class="icon">📦</span>
+      <span class="label">全部</span>
     </button>
     <label class="backup-btn import" title="匯入備份">
       <span class="icon">📤</span>
@@ -22,14 +26,15 @@ import { ref } from 'vue'
 const props = defineProps({
   salary: { type: Number, required: true },
   categories: { type: Array, required: true },
-  expenses: { type: Array, default: () => [] }
+  expenses: { type: Array, default: () => [] },
+  allData: { type: Object, default: () => ({}) }
 })
 
 const emit = defineEmits(['import'])
 
 const copied = ref(false)
 
-// 匯出為JSON檔案
+// 匯出當月為JSON檔案
 const exportData = () => {
   const data = {
     salary: props.salary,
@@ -37,11 +42,25 @@ const exportData = () => {
     expenses: props.expenses,
     exportedAt: new Date().toISOString()
   }
+  downloadJson(data, 'salary-backup')
+}
+
+// 匯出所有月份
+const exportAllData = () => {
+  const data = {
+    salary: props.salary,
+    allData: props.allData,
+    exportedAt: new Date().toISOString()
+  }
+  downloadJson(data, 'salary-full-backup')
+}
+
+const downloadJson = (data, prefix) => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `salary-backup-${new Date().toISOString().slice(0, 10)}.json`
+  a.download = `${prefix}-${new Date().toISOString().slice(0, 10)}.json`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -55,7 +74,7 @@ const importData = (event) => {
   reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target.result)
-      if (data.salary && data.categories) {
+      if (data.salary && (data.categories || data.allData)) {
         emit('import', data)
         alert('匯入成功！')
       } else {
@@ -69,7 +88,7 @@ const importData = (event) => {
   event.target.value = ''
 }
 
-// 複製URL hash連結
+// 複製URL hash連結（僅當月）
 const copyLink = () => {
   const data = {
     s: props.salary,
@@ -131,7 +150,7 @@ const copyLink = () => {
   min-width: 40px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 500px) {
   .backup-btn .label {
     display: none;
   }

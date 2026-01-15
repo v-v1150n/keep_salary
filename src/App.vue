@@ -6,16 +6,21 @@
       <div class="top-controls">
         <BackupControls 
           :salary="salary" 
-          :categories="categories"
-          :expenses="expenses"
+          :categories="currentCategories"
+          :expenses="currentExpenses"
+          :allData="allMonthlyData"
           @import="handleImport" 
         />
       </div>
     </header>
 
+    <section class="month-section">
+      <MonthSelector v-model="currentMonthKey" />
+    </section>
+
     <section class="settings-section clay-card">
       <SalaryInput v-model="salary" />
-      <RatioSelector v-model="categories" />
+      <RatioSelector v-model="currentCategories" />
     </section>
 
     <section class="summary-section">
@@ -35,30 +40,30 @@
 
     <section class="expense-section">
       <ExpenseForm
-        :categories="categories"
+        :categories="currentCategories"
         @add-expense="handleAddExpense"
       />
     </section>
 
     <section class="history-section">
       <ExpenseList
-        :expenses="expenses"
-        :categories="categories"
+        :expenses="currentExpenses"
+        :categories="currentCategories"
         @delete="handleDeleteExpense"
         @clear-all="handleClearExpenses"
       />
     </section>
 
     <footer class="app-footer">
-      <button class="reset-btn" @click="resetAll">
-        🔄 重置全部
+      <button class="reset-btn" @click="resetCurrentMonth">
+        🔄 重置本月
       </button>
     </footer>
   </div>
 </template>
 
 <script setup>
-import { computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useStorage } from './composables/useStorage'
 import SalaryInput from './components/SalaryInput.vue'
 import RatioSelector from './components/RatioSelector.vue'
@@ -67,18 +72,82 @@ import ExpenseForm from './components/ExpenseForm.vue'
 import ExpenseList from './components/ExpenseList.vue'
 import TotalSummary from './components/TotalSummary.vue'
 import BackupControls from './components/BackupControls.vue'
+import MonthSelector from './components/MonthSelector.vue'
 
-// 使用 LocalStorage 持久化
+// 取得當前月份 key
+const getCurrentMonthKey = () => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+// 當前選擇的月份
+const currentMonthKey = ref(getCurrentMonthKey())
+
+// 全域設定（跨月份共用）
 const salary = useStorage('salary-manager-salary', 50000)
-const categories = useStorage('salary-manager-categories', [
+
+// 所有月份資料
+const allMonthlyData = useStorage('salary-manager-monthly', {})
+
+// 預設分類模板
+const defaultCategories = [
   { id: 1, name: '生活開銷', ratio: 6, budget: 0, spent: 0 },
   { id: 2, name: '儲蓄', ratio: 3, budget: 0, spent: 0 },
   { id: 3, name: '娛樂', ratio: 1, budget: 0, spent: 0 }
-])
-const expenses = useStorage('salary-manager-expenses', [])
+]
+
+// 確保當前月份資料存在
+const ensureMonthData = (monthKey) => {
+  if (!allMonthlyData.value[monthKey]) {
+    // 複製上個月的分類設定（但重置 spent）
+    const prevMonth = getPrevMonthKey(monthKey)
+    const prevData = allMonthlyData.value[prevMonth]
+    
+    const categories = prevData?.categories 
+      ? prevData.categories.map(c => ({ ...c, spent: 0 }))
+      : JSON.parse(JSON.stringify(defaultCategories))
+    
+    allMonthlyData.value[monthKey] = {
+      categories,
+      expenses: []
+    }
+  }
+}
+
+const getPrevMonthKey = (monthKey) => {
+  const [year, month] = monthKey.split('-').map(Number)
+  const date = new Date(year, month - 2)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
+// 當前月份的分類
+const currentCategories = computed({
+  get: () => {
+    ensureMonthData(currentMonthKey.value)
+    return allMonthlyData.value[currentMonthKey.value].categories
+  },
+  set: (val) => {
+    ensureMonthData(currentMonthKey.value)
+    allMonthlyData.value[currentMonthKey.value].categories = val
+  }
+})
+
+// 當前月份的支出
+const currentExpenses = computed({
+  get: () => {
+    ensureMonthData(currentMonthKey.value)
+    return allMonthlyData.value[currentMonthKey.value].expenses
+  },
+  set: (val) => {
+    ensureMonthData(currentMonthKey.value)
+    allMonthlyData.value[currentMonthKey.value].expenses = val
+  }
+})
 
 // 初始化時檢查 URL Hash
 onMounted(() => {
+  ensureMonthData(currentMonthKey.value)
+  
   const hash = window.location.hash
   if (hash.length > 1) {
     try {
@@ -86,9 +155,9 @@ onMounted(() => {
       const data = JSON.parse(json)
       
       if (typeof data.s === 'number' && Array.isArray(data.c)) {
-        if (confirm('偵測到分享連結資料，是否載入？（目前的資料將被覆蓋）')) {
+        if (confirm('偵測到分享連結資料，是否載入？（本月資料將被覆蓋）')) {
           salary.value = data.s
-          categories.value = data.c.map((c, index) => ({
+          currentCategories.value = data.c.map((c, index) => ({
             id: index + 1,
             name: c.n,
             ratio: c.r,
@@ -96,7 +165,7 @@ onMounted(() => {
             spent: c.p || 0
           }))
           if (data.e) {
-            expenses.value = data.e
+            currentExpenses.value = data.e
           }
           history.replaceState(null, '', ' ')
         }
@@ -109,42 +178,49 @@ onMounted(() => {
 
 // 處理 JSON 匯入
 const handleImport = (data) => {
-  if (confirm('確定要載入備份檔案嗎？會覆蓋目前的設定。')) {
+  if (data.allData) {
+    // 完整備份匯入
+    if (confirm('確定要載入完整備份嗎？所有月份資料將被覆蓋。')) {
+      salary.value = data.salary
+      allMonthlyData.value = data.allData
+    }
+  } else if (confirm('確定要載入備份嗎？本月資料將被覆蓋。')) {
     salary.value = data.salary
-    categories.value = data.categories
+    currentCategories.value = data.categories
     if (data.expenses) {
-      expenses.value = data.expenses
+      currentExpenses.value = data.expenses
     }
   }
 }
 
 // 計算每個類別的預算
 const categoriesWithBudget = computed(() => {
-  const totalRatio = categories.value.reduce((sum, c) => sum + c.ratio, 0)
-  if (totalRatio === 0) return categories.value
+  const cats = currentCategories.value
+  const totalRatio = cats.reduce((sum, c) => sum + c.ratio, 0)
+  if (totalRatio === 0) return cats
   
-  return categories.value.map(category => ({
+  return cats.map(category => ({
     ...category,
     budget: Math.round((category.ratio / totalRatio) * salary.value)
   }))
 })
 
-// 當預算計算後，同步更新到 categories
+// 同步預算到分類
 watch(categoriesWithBudget, (newCats) => {
   newCats.forEach((cat, index) => {
-    if (categories.value[index]) {
-      categories.value[index].budget = cat.budget
+    if (currentCategories.value[index]) {
+      currentCategories.value[index].budget = cat.budget
     }
   })
 }, { deep: true })
 
 // 處理新增支出
 const handleAddExpense = ({ categoryId, amount, note }) => {
-  const index = categories.value.findIndex(c => c.id === categoryId)
+  const cats = currentCategories.value
+  const index = cats.findIndex(c => c.id === categoryId)
   if (index !== -1) {
-    categories.value[index].spent += amount
-    // 記錄到 expenses
-    expenses.value.push({
+    cats[index].spent += amount
+    currentExpenses.value.push({
       id: Date.now(),
       categoryId,
       amount,
@@ -156,39 +232,35 @@ const handleAddExpense = ({ categoryId, amount, note }) => {
 
 // 刪除單筆支出
 const handleDeleteExpense = (expenseId) => {
-  const expense = expenses.value.find(e => e.id === expenseId)
+  const expenses = currentExpenses.value
+  const expense = expenses.find(e => e.id === expenseId)
   if (expense) {
-    // 扣回 spent
-    const catIndex = categories.value.findIndex(c => c.id === expense.categoryId)
+    const cats = currentCategories.value
+    const catIndex = cats.findIndex(c => c.id === expense.categoryId)
     if (catIndex !== -1) {
-      categories.value[catIndex].spent -= expense.amount
+      cats[catIndex].spent -= expense.amount
     }
-    // 移除紀錄
-    expenses.value = expenses.value.filter(e => e.id !== expenseId)
+    currentExpenses.value = expenses.filter(e => e.id !== expenseId)
   }
 }
 
-// 清除所有支出紀錄
+// 清除當月所有支出
 const handleClearExpenses = () => {
-  if (confirm('確定要清除所有支出紀錄嗎？')) {
-    // 重置所有 spent
-    categories.value.forEach(cat => {
+  if (confirm('確定要清除本月所有支出紀錄嗎？')) {
+    currentCategories.value.forEach(cat => {
       cat.spent = 0
     })
-    expenses.value = []
+    currentExpenses.value = []
   }
 }
 
-// 重置所有資料
-const resetAll = () => {
-  if (confirm('確定要重置所有資料嗎？')) {
-    salary.value = 50000
-    categories.value = [
-      { id: 1, name: '生活開銷', ratio: 6, budget: 0, spent: 0 },
-      { id: 2, name: '儲蓄', ratio: 3, budget: 0, spent: 0 },
-      { id: 3, name: '娛樂', ratio: 1, budget: 0, spent: 0 }
-    ]
-    expenses.value = []
+// 重置當月資料
+const resetCurrentMonth = () => {
+  if (confirm('確定要重置本月資料嗎？分類設定與支出都會清空。')) {
+    allMonthlyData.value[currentMonthKey.value] = {
+      categories: JSON.parse(JSON.stringify(defaultCategories)),
+      expenses: []
+    }
   }
 }
 </script>
@@ -197,7 +269,7 @@ const resetAll = () => {
 .app {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .app-header {
@@ -225,6 +297,10 @@ const resetAll = () => {
   display: flex;
   justify-content: center;
   margin-top: 1rem;
+}
+
+.month-section {
+  margin-top: -0.5rem;
 }
 
 .settings-section {
@@ -279,7 +355,7 @@ const resetAll = () => {
 /* Mobile */
 @media (max-width: 500px) {
   .app {
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
   
   .app-header h1 {
