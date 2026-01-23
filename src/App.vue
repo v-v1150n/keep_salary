@@ -35,6 +35,7 @@
         v-for="category in categoriesWithBudget"
         :key="category.id"
         :category="category"
+        :expenses="currentExpenses"
       />
     </section>
 
