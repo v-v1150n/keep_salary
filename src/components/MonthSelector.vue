@@ -38,12 +38,7 @@ const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart
 
 const isCurrentMonth = computed(() => props.modelValue === todayKey)
 
-const canGoNext = computed(() => {
-  const [year, month] = props.modelValue.split('-').map(Number)
-  const current = new Date(year, month - 1)
-  const limit = new Date(today.getFullYear(), today.getMonth())
-  return current < limit
-})
+const canGoNext = computed(() => true) // 可以無限往後
 
 const canGoPrev = computed(() => true) // 可以無限往前
 
